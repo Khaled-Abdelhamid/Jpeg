@@ -105,5 +105,5 @@ class Huffman_encoding:
 
 
 
-test = Huffman_encoding()
-test.compress("in.txt")
+# test = Huffman_encoding()
+# test.compress("in.txt")
