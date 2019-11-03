@@ -56,33 +56,34 @@ def dequantize(DCTmat,Q):
 def error(oimg,nimg):
   return np.sum(np.square(np.subtract(oimg,nimg)))
 
-def isValid(i, j,  N):
-   if (i < 0 or i >= N or j >= N or j < 0):
+#########################################################################3
+#zigzag transformation
+def Two2oneD(arr):
+  One_D_array = [];
+  N = len(arr[0]);
+  arr = np.asarray(arr);
+  
+  def isValid(i, j,  N):
+   if (i < 0 or i >= N or j >= N or j < 0): 
        return False                             # Learned that true and false have to start with capitals
    return True
-
-def diagonal(arr,N):
-#This is the code for the function which converts the 2D array to 1D array
-#The idea here is that I considered the first column and the last row as the starting indexes of the diagonals of the 2D array
-#The function is called diagonal and the inputs are the array and its size which is N and the ouput is the 1D arary
-
-  One_D_array = []
+ 
   for k in range(0, N) :
-    flippedd = []
-    if(k%2!=0):                                      # If the index of the coulmn is odd
+    flippedd = [];
+    if(k%2!=0):                                      # If the index of the coulmn is odd 
       flippedd.append(arr[k][0])
     else:
       One_D_array.append(arr[k][0])
     i=k-1; #setting row index to point to next point in the diagonal
     j=1;   #setting column index to point to next point in the diagonal
-
+   
     if(k%2!=0):
-      while (isValid(i, j, N)) :
+      while (isValid(i, j, N)) : 
         flippedd.append(arr[i][j])
         i -= 1 #Moving up accross the diagonal by increasing the column index and decreasing the row index
         j += 1
     else:
-      while (isValid(i, j,N)) :
+      while (isValid(i, j,N)) : 
         One_D_array.append(arr[i][j])
         i -= 1 #Moving up accross the diagonal by increasing the column index and decreasing the row index
         j += 1
@@ -90,19 +91,19 @@ def diagonal(arr,N):
     for z in range(len(flippedd)):
         One_D_array.append(flippedd[z])   #Learned that array index should be put between [] not ()
     del flippedd[:]
-
+    
   for k2 in range(1,N):
-    flipped2 =[]
+    flipped2 = [];
     if(k2 % 2==0):
       flipped2.append(arr[N-1][k2])
     else:
       One_D_array.append(arr[N-1][k2])
-    i = N - 2
-    j = k2 + 1
-
+    i = N - 2;
+    j = k2 + 1;
+    
     if(k%2==0):
       while (isValid(i, j,N)) :
-        flipped2 = []
+        flipped2 = [];
         flipped2.append(arr[i][j])
         i -= 1 #Moving up accross the diagonal by increasing the column index and decreasing the row index
         j += 1
@@ -115,16 +116,13 @@ def diagonal(arr,N):
     for z in range(len(flipped2)):
       One_D_array.append(flipped2[z])
     del flipped2[:]
-  return One_D_array
-
-
-
-
-
-
-def invzig(arr):
+  return np.asarray(One_D_array)
+ ################################################################3
+#inverse zigzag transformation
+def oneD2twoD(arr):
   rows, cols = (int(math.sqrt(len(arr))), int(math.sqrt(len(arr)))) 
   result = [[0 for i in range(cols)] for j in range(rows)] 
+  result = np.asarray(result)
   count = 0;
   for i in range(0,2*rows):
     if(i%2 == 0):
@@ -159,12 +157,7 @@ def invzig(arr):
         count = count +1;
         x = x + 1;
         y = y - 1;
-  return result;
-
-
-
-
-
+  return result
 ########################################
 ## run length
 def run_length(st):
@@ -216,8 +209,6 @@ def run_length(st):
 
     
     return encoded
-
-
 
 ########################################
 ## reverse run_length
