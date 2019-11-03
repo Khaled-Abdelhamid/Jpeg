@@ -1,14 +1,11 @@
 from helpers import *
-import run_length
-import huffman
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 
 # call the image and convert it into gray scale
-oimage = Image.open("1.bmp").convert('LA')
-oimage.save('1gray.png')
-gim=plt.imread('1gray.png')
+
+gim = plt.imread('2greyscale.png')
 gray = rgb2gray(gim)
 
 plt.imshow(gray, cmap=plt.get_cmap('gray'), vmin=0, vmax=1)
@@ -37,11 +34,15 @@ Q2=[[1,2,4,8,16,32,64,128],
     [64,64,128,128,256,256,256,256],
     [128,128,128,256,256,256,256,256]]
 
-for r in range((rows/frows)-1):
-    for c in range((cols/fcols)-1):
+for r in range(int(rows/frows)-1):
+    for c in range(int(cols/fcols)-1):
         frame=gray[r:r+frows,c:c+fcols]
         DCTmat=DCT(frame)
         quantize(DCTmat,Q1)
+        twoD2oneD(frame)
         #performrunlength
         #performhuffman
         #indentover the final vector
+
+
+print(DCTmat.shape)
