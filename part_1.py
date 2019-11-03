@@ -34,6 +34,7 @@ Q2=[[1,2,4,8,16,32,64,128],
     [64,64,128,128,256,256,256,256],
     [128,128,128,256,256,256,256,256]]
 
+frame1D=np.zeros(frows*fcols)
 for r in range(int(rows/frows)-1):
     for c in range(int(cols/fcols)-1):
         frame=gray[r:r+frows,c:c+fcols]
