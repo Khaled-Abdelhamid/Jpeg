@@ -4,10 +4,10 @@ from PIL import Image
 import numpy as np
 
 # call the image and convert it into gray scale
-# oimage = Image.open("2.bmp").convert('LA')
-# oimage.save('2gray.png')
+oimage = Image.open("img.bmp").convert('LA')
+oimage.save('gimg.png')
 
-gim = plt.imread('2gray.png')
+gim = plt.imread('gimg.png')
 gray = rgb2gray(gim)
 
 plt.imshow(gray, cmap=plt.get_cmap('gray'), vmin=0, vmax=1)
@@ -76,18 +76,40 @@ Q6= [
     [72,92,95,98,112,100,103,99]
     ]
 
-
+# def encode(frows,fcols,Q,gray):
+Q=Q1
 frame1D=np.zeros(frows*fcols)
-
+finalvec=[]
 for r in range(int(rows/frows)-1):
     for c in range(int(cols/fcols)-1):
         frame=gray[r:r+frows,c:c+fcols]
-        DCTmat=DCT(frame)
-        quantize(DCTmat,Q1)
-        frame1D=oneD2twoD(frame)
+        DCTmat=DCT(frame) #it turned out that the frame of size 8 gets the least error when implementing DCT,the 4 and 16 stil get a relatively low error 
+        quantize(DCTmat,Q)
+        frame1D=zigzag(frame,frows)
         encoded=run_length(frame1D)
-        finalvec=np.append(finalvec,encoded)
+        
+        finalvec.append(encoded)
+
+finalvec=np.asarray(finalvec)
+
+huffman = Huffman_encoding()
+encoded_img = huffman.compress(finalvec)  #encoded message
+
+    # return x,huffman
+
+def decodecode(finalvec, huffman):
+    recimage=np.zeros((rows,cols))# intialize recovered image
+    decoded = huffman.decode_text(finalvec)
+    decoded=reverse_run_length(decoded)# expand the runlength code
+    
+    for r in range(int(rows/frows)-1):
+        for c in range(int(cols/fcols)-1):
+            DCTmat1D=decoded[0:0+frows*fcols]#! still need modification
+            DCTmat=invzig(frame1D)
+            DCTmat=dequantize(DCTmat,Q)
+            frame=IDCT(DCTmat)
+            recimage[r:r+frows,c:c+fcols]=frame
+    return recimage
 
 
-
-print(DCTmat.shape)
+quality=error(gray,recimage)

@@ -2,28 +2,44 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
 import math
-
+import heapq
+import os
 
 def rgb2gray(rgb):
+  # transforms RGB image into grayscale image , it takes an array with 3 channels and output a 2D array
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
 
+def square(img):
+  rows,cols=img.shape
+  if rows<=cols:
+    return img[:,:rows]
+  else:
+    return img[:cols,cols]
+
+
 def fixdims(img,frows,fcols): # fix the dimensions to make them multiples of the frame size
+  # img , is the image array
+  # frows is the number of rows for each frame
+  # fcols is the number of columns for each frame
+  
   rows,cols,_ =img.shape #get the original rows and colomns and discard the cannal dimension
   rows-=rows%frows
   cols-=cols%fcols
   img=img[:rows,:cols,:]
   return img
 
-
-
 def getbasis(u,v,brows,bcols):#helper function to get the basis that will be used in DCT
+  # u,v is the location of the basis in the DCT matrics
+  # brows  the number of rows of the basis
+  # bcols  the number of columns of the basis 
   basis=np.zeros((brows,bcols))
   for i in range(brows):
     for j in range(bcols):
       basis[i,j]=np.cos((2*i+1)*u*np.pi/16)*np.cos((2*j+1)*v*np.pi/16)
   return basis
 
-def DCT(frame):
+def DCT(frame):# performs discrete cosine transform, it takes the frame and outputs the DCT matrix
+  
   frows,fcols=frame.shape
   DCTmat=np.zeros((frows,fcols))
   for u in range(frows):
@@ -37,7 +53,7 @@ def DCT(frame):
   DCTmat[1:,1:]/=16
   return DCTmat
 
-def IDCT(DCTmat):#the function multipy each basis with the corresponding scale and adds them up
+def IDCT(DCTmat):#the function multipy each basis with the corresponding scale and adds them up 
   frows,fcols=DCTmat.shape
   frame=np.zeros((frows,fcols))
   for u in range(frows):
@@ -46,7 +62,7 @@ def IDCT(DCTmat):#the function multipy each basis with the corresponding scale a
       frame+=DCTmat[u,v]*basis
   return frame
 
-def quantize(DCTmat,Q):
+def quantize(DCTmat,Q):# the quantiztion function takes the DCT matrix and the quantization table then it performs elementwise divison then round it to nearst integer
   DCTmat=np.divide(DCTmat,Q)
   DCTmat=np.round(DCTmat)
 
@@ -54,36 +70,38 @@ def dequantize(DCTmat,Q):
   DCTmat=np.multiply(DCTmat,Q)
 
 def error(oimg,nimg):
+  #get the least square error 
   return np.sum(np.square(np.subtract(oimg,nimg)))
 
 #########################################################################3
 #zigzag transformation
-def Two2oneD(arr):
-  One_D_array = [];
-  N = len(arr[0]);
-  arr = np.asarray(arr);
-  
-  def isValid(i, j,  N):
-   if (i < 0 or i >= N or j >= N or j < 0): 
-       return False                             # Learned that true and false have to start with capitals
+def isValid(i, j,  N):
+   if (i < 0 or i >= N or j >= N or j < 0):
+       return False                            
    return True
- 
+
+def zigzag(arr,N):
+#This is the code for the function which converts the 2D array to 1D array
+#The idea here is that I considered the first column and the last row as the starting indexes of the diagonals of the 2D array
+#The function is called zigzag and the inputs are the array and its size which is N and the ouput is the 1D arary
+
+  One_D_array = []
   for k in range(0, N) :
-    flippedd = [];
-    if(k%2!=0):                                      # If the index of the coulmn is odd 
+    flippedd = []
+    if(k%2!=0):                                      # If the index of the coulmn is odd
       flippedd.append(arr[k][0])
     else:
       One_D_array.append(arr[k][0])
     i=k-1; #setting row index to point to next point in the diagonal
     j=1;   #setting column index to point to next point in the diagonal
-   
+
     if(k%2!=0):
-      while (isValid(i, j, N)) : 
+      while (isValid(i, j, N)) :
         flippedd.append(arr[i][j])
         i -= 1 #Moving up accross the diagonal by increasing the column index and decreasing the row index
         j += 1
     else:
-      while (isValid(i, j,N)) : 
+      while (isValid(i, j,N)) :
         One_D_array.append(arr[i][j])
         i -= 1 #Moving up accross the diagonal by increasing the column index and decreasing the row index
         j += 1
@@ -91,19 +109,19 @@ def Two2oneD(arr):
     for z in range(len(flippedd)):
         One_D_array.append(flippedd[z])   #Learned that array index should be put between [] not ()
     del flippedd[:]
-    
+
   for k2 in range(1,N):
-    flipped2 = [];
+    flipped2 =[]
     if(k2 % 2==0):
       flipped2.append(arr[N-1][k2])
     else:
       One_D_array.append(arr[N-1][k2])
-    i = N - 2;
-    j = k2 + 1;
-    
+    i = N - 2
+    j = k2 + 1
+
     if(k%2==0):
       while (isValid(i, j,N)) :
-        flipped2 = [];
+        flipped2 = []
         flipped2.append(arr[i][j])
         i -= 1 #Moving up accross the diagonal by increasing the column index and decreasing the row index
         j += 1
@@ -116,13 +134,14 @@ def Two2oneD(arr):
     for z in range(len(flipped2)):
       One_D_array.append(flipped2[z])
     del flipped2[:]
-  return np.asarray(One_D_array)
+  return One_D_array
+
  ################################################################3
 #inverse zigzag transformation
-def oneD2twoD(arr):
+
+def invzig(arr):
   rows, cols = (int(math.sqrt(len(arr))), int(math.sqrt(len(arr)))) 
   result = [[0 for i in range(cols)] for j in range(rows)] 
-  result = np.asarray(result)
   count = 0;
   for i in range(0,2*rows):
     if(i%2 == 0):
@@ -157,7 +176,10 @@ def oneD2twoD(arr):
         count = count +1;
         x = x + 1;
         y = y - 1;
-  return result
+  return result;
+
+
+
 ########################################
 ## run length
 def run_length(st):
@@ -236,9 +258,6 @@ def reverse_run_length(encoded):
 ########################################
 ## Huffman encoding
 
-import heapq
-import os
-
 class node:
     def __init__(self, symbol, frequency):
         self.symbol = symbol
@@ -254,8 +273,6 @@ class node:
             return -1
 
         return self.freq > other.freq
-
-
 
 class Huffman_encoding:
     def __init__(self):
